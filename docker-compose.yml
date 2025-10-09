@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  mcp-endpoint:
+    build:
+      context: ./mcp-endpoint-example
+    image: armoriq-mcp-endpoint:local
+    ports:
+      - "3001:3001"
+
+  armoriq-proxy:
+    build:
+      context: ./armoriq-proxy
+    image: armoriq-proxy:local
+    environment:
+      MCP_ENDPOINT_URL: http://mcp-endpoint:3001
+    ports:
+      - "5001:5001"
+    depends_on:
+      - mcp-endpoint
+
+  agent:
+    build:
+      context: ./agent-example
+    image: armoriq-agent:local
+    environment:
+      ARMORIQ_PROXY_URL: http://armoriq-proxy:5001
+      ARMORIQ_API_KEY: ${ARMORIQ_API_KEY:-demo-key-12345678901234567890}
+      AGENT_ID: ${AGENT_ID:-agent-123}
+      ENDPOINT_ID: ${ENDPOINT_ID:-customer-data-service}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    depends_on:
+      - armoriq-proxy

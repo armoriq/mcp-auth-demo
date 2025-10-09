@@ -1,0 +1,17 @@
+{
+  "name": "armoriq-proxy",
+  "version": "1.0.0",
+  "description": "ArmorIQ zero-trust proxy for securing MCP endpoint access",
+  "main": "proxy-server.js",
+  "scripts": {
+    "start": "node proxy-server.js"
+  },
+  "keywords": ["armoriq", "mcp", "proxy", "zero-trust"],
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "bcryptjs": "^2.4.3",
+    "axios": "^1.6.0",
+    "cors": "^2.8.5"
+  }
+}

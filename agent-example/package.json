@@ -1,0 +1,16 @@
+{
+  "name": "agent-example",
+  "version": "1.0.0",
+  "description": "Sample AI agent accessing MCP endpoints through ArmorIQ proxy",
+  "main": "agent.js",
+  "scripts": {
+    "start": "node agent.js"
+  },
+  "keywords": ["ai-agent", "openai", "mcp", "armoriq"],
+  "license": "MIT",
+  "dependencies": {
+    "openai": "^4.20.0",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1"
+  }
+}
