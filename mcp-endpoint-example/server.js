@@ -11,6 +11,7 @@ const cors = require('cors');
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.set('json spaces', 2);
 
 // Sample in-memory customer database
 const customers = [
@@ -44,7 +45,8 @@ app.get('/.well-known/mcp', (req, res) => {
 
 // READ - Get all customers
 app.get('/api/customers', (req, res) => {
-  console.log('[MCP Endpoint] READ request for all customers');
+  console.log('\n📡 [MCP Endpoint] READ request for all customers');
+  console.table(customers.map(({ id, name, plan, status }) => ({ id, name, plan, status })));
   res.json({
     success: true,
     data: customers,
@@ -55,19 +57,20 @@ app.get('/api/customers', (req, res) => {
 // READ - Get customer by ID
 app.get('/api/customers/:id', (req, res) => {
   const { id } = req.params;
-  console.log(`[MCP Endpoint] READ request for customer ${id}`);
+  console.log(`\n📡 [MCP Endpoint] READ request for customer ${id}`);
   
   const customer = customers.find(c => c.id === id);
   if (!customer) {
     return res.status(404).json({ success: false, error: 'Customer not found' });
   }
   
+  console.table([{ id: customer.id, name: customer.name, plan: customer.plan, status: customer.status }]);
   res.json({ success: true, data: customer });
 });
 
 // CREATE - Add new customer
 app.post('/api/customers', (req, res) => {
-  console.log('[MCP Endpoint] CREATE request for new customer');
+  console.log('\n🛠️  [MCP Endpoint] CREATE request for new customer');
   
   const newCustomer = {
     id: String(customers.length + 1),
@@ -76,13 +79,14 @@ app.post('/api/customers', (req, res) => {
   };
   
   customers.push(newCustomer);
+  console.table([{ id: newCustomer.id, name: newCustomer.name, plan: newCustomer.plan, status: newCustomer.status }]);
   res.status(201).json({ success: true, data: newCustomer });
 });
 
 // UPDATE - Update existing customer
 app.put('/api/customers/:id', (req, res) => {
   const { id } = req.params;
-  console.log(`[MCP Endpoint] UPDATE request for customer ${id}`);
+  console.log(`\n🛠️  [MCP Endpoint] UPDATE request for customer ${id}`);
   
   const customerIndex = customers.findIndex(c => c.id === id);
   if (customerIndex === -1) {
@@ -90,13 +94,15 @@ app.put('/api/customers/:id', (req, res) => {
   }
   
   customers[customerIndex] = { ...customers[customerIndex], ...req.body };
+  const updated = customers[customerIndex];
+  console.table([{ id: updated.id, name: updated.name, plan: updated.plan, status: updated.status }]);
   res.json({ success: true, data: customers[customerIndex] });
 });
 
 // DELETE - Remove customer
 app.delete('/api/customers/:id', (req, res) => {
   const { id } = req.params;
-  console.log(`[MCP Endpoint] DELETE request for customer ${id}`);
+  console.log(`\n🛠️  [MCP Endpoint] DELETE request for customer ${id}`);
   
   const customerIndex = customers.findIndex(c => c.id === id);
   if (customerIndex === -1) {
@@ -104,6 +110,7 @@ app.delete('/api/customers/:id', (req, res) => {
   }
   
   const deletedCustomer = customers.splice(customerIndex, 1)[0];
+  console.table([{ id: deletedCustomer.id, name: deletedCustomer.name, plan: deletedCustomer.plan, status: deletedCustomer.status }]);
   res.json({ success: true, data: deletedCustomer });
 });
 

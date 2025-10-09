@@ -13,9 +13,15 @@ const cors = require('cors');
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.set('json spaces', 2);
 
 // Configuration
 const MCP_ENDPOINT_URL = process.env.MCP_ENDPOINT_URL || 'http://localhost:3001';
+
+function prettyPrint(title, payload) {
+  console.log(`\n${title}`);
+  console.log(JSON.stringify(payload, null, 2));
+}
 
 // In-memory storage (in production, use PostgreSQL)
 const registeredEndpoints = new Map();
@@ -49,11 +55,11 @@ async function initializeSampleData() {
     }
   });
   
-  console.log('\n📋 Sample Configuration Loaded:');
-  console.log(`   Endpoint ID: ${endpointId}`);
-  console.log(`   API Key: ${apiKey}`);
-  console.log(`   Agent ID: agent-123 (permissions: CRUD without Delete)`);
-  console.log('');
+  prettyPrint('📋 Sample Configuration Loaded', {
+    endpoint: { id: endpointId, url: MCP_ENDPOINT_URL },
+    credentials: { apiKey },
+    agentPolicy: agentPolicies.get('agent-123')
+  });
 }
 
 // Middleware: Verify API Key
@@ -143,7 +149,8 @@ async function proxyRequest(req, res) {
     const forwardedPath = path.startsWith('/') ? path : `/${path}`;
     const targetUrl = `${baseUrl}${forwardedPath}`;
     
-    console.log(`[ArmorIQ Proxy] ${req.method} ${targetUrl} (Agent: ${req.agentId}, Permission: ${req.requiredPermission})`);
+    console.log(`\n⚙️  [ArmorIQ Proxy] ${req.method} ${targetUrl}`);
+    console.log(`   Agent: ${req.agentId} | Permission: ${req.requiredPermission}`);
     
     const response = await axios({
       method: req.method,
@@ -183,7 +190,7 @@ function auditLog(endpointId, req, status, message) {
   };
   
   auditLogs.push(log);
-  console.log(`[AUDIT] ${status} - ${message} (Agent: ${log.agentId}, ${req.method} ${req.path})`);
+  prettyPrint(`🧾 [AUDIT] ${status} — ${message}`, log);
 }
 
 // Routes
