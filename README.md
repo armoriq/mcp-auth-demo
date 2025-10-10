@@ -17,6 +17,9 @@ The zero-trust proxy layer that sits between agents and MCP endpoints, enforcing
 - Policy-based access control
 - Comprehensive audit logging
 
+### 4. Admin API (`/admin-api`)
+FastAPI service that surfaces proxy health, audit logs, and policy management endpoints for UI integrations.
+
 ## Architecture
 
 ```
@@ -50,6 +53,17 @@ The zero-trust proxy layer that sits between agents and MCP endpoints, enforcing
    # Configure OPENAI_API_KEY and ARMORIQ_ENDPOINT
    npm start
    ```
+
+4. **Launch the Admin API UI:**
+   ```bash
+   ADMIN_API_HOST_PORT=8000 ARMORIQ_PROXY_HOST_PORT=5001 \
+   docker compose up --build armoriq-proxy admin-api
+   ```
+   When the containers are running, open `http://localhost:8000/docs` to view the FastAPI Swagger UI. From there you can:
+   - Check proxy health via `GET /status`
+   - Review audit trails with `GET /logs`
+   - Enumerate registered endpoints (`GET /endpoints`)
+   - Manage agent policies (`GET/POST/PUT/DELETE /policies`)
 
 ## Key Features Demonstrated
 

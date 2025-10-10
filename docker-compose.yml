@@ -6,7 +6,7 @@ services:
       context: ./mcp-endpoint-example
     image: armoriq-mcp-endpoint:local
     ports:
-      - "3001:3001"
+      - "${MCP_ENDPOINT_HOST_PORT:-3001}:3001"
 
   armoriq-proxy:
     build:
@@ -15,9 +15,20 @@ services:
     environment:
       MCP_ENDPOINT_URL: http://mcp-endpoint:3001
     ports:
-      - "5001:5001"
+      - "${ARMORIQ_PROXY_HOST_PORT:-5001}:5001"
     depends_on:
       - mcp-endpoint
+
+  admin-api:
+    build:
+      context: ./admin-api
+    image: armoriq-admin-api:local
+    environment:
+      ARMORIQ_PROXY_URL: http://armoriq-proxy:5001
+    ports:
+      - "${ADMIN_API_HOST_PORT:-8000}:8000"
+    depends_on:
+      - armoriq-proxy
 
   agent:
     build:

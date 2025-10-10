@@ -28,6 +28,35 @@ const registeredEndpoints = new Map();
 const agentPolicies = new Map();
 const auditLogs = [];
 
+function serializeEndpoint(endpoint) {
+  return {
+    id: endpoint.id,
+    name: endpoint.name,
+    url: endpoint.url
+  };
+}
+
+function serializePolicy(policy) {
+  return {
+    agentId: policy.agentId,
+    endpointId: policy.endpointId,
+    permissions: { ...policy.permissions }
+  };
+}
+
+function buildPermissions(newPermissions = {}, existingPermissions = {}) {
+  const keys = ['read', 'create', 'update', 'delete'];
+  const merged = { ...existingPermissions };
+  for (const key of keys) {
+    if (Object.prototype.hasOwnProperty.call(newPermissions, key)) {
+      merged[key] = Boolean(newPermissions[key]);
+    } else if (merged[key] === undefined) {
+      merged[key] = false;
+    }
+  }
+  return merged;
+}
+
 // Initialize with sample data
 async function initializeSampleData() {
   // Register MCP endpoint
@@ -194,6 +223,82 @@ function auditLog(endpointId, req, status, message) {
 }
 
 // Routes
+
+// Admin helpers for UI integrations
+app.get('/api/endpoints', (req, res) => {
+  const endpoints = Array.from(registeredEndpoints.values()).map(serializeEndpoint);
+  res.json({ endpoints });
+});
+
+app.get('/api/policies', (req, res) => {
+  const policies = Array.from(agentPolicies.values()).map(serializePolicy);
+  res.json({ policies });
+});
+
+app.get('/api/policies/:agentId', (req, res) => {
+  const policy = agentPolicies.get(req.params.agentId);
+  if (!policy) {
+    return res.status(404).json({ error: 'Policy not found' });
+  }
+  res.json(serializePolicy(policy));
+});
+
+app.post('/api/policies', (req, res) => {
+  const { agentId, endpointId, permissions = {} } = req.body || {};
+
+  if (!agentId || !endpointId) {
+    return res.status(400).json({ error: 'agentId and endpointId are required' });
+  }
+
+  if (!registeredEndpoints.has(endpointId)) {
+    return res.status(404).json({ error: `Endpoint ${endpointId} not registered` });
+  }
+
+  if (agentPolicies.has(agentId)) {
+    return res.status(409).json({ error: `Policy already exists for agent ${agentId}` });
+  }
+
+  const policy = {
+    agentId,
+    endpointId,
+    permissions: buildPermissions(permissions)
+  };
+
+  agentPolicies.set(agentId, policy);
+  prettyPrint('🆕 Policy created', serializePolicy(policy));
+  res.status(201).json(serializePolicy(policy));
+});
+
+app.put('/api/policies/:agentId', (req, res) => {
+  const agentId = req.params.agentId;
+  const existing = agentPolicies.get(agentId);
+
+  if (!existing) {
+    return res.status(404).json({ error: 'Policy not found' });
+  }
+
+  const { permissions = {} } = req.body || {};
+  const updatedPolicy = {
+    ...existing,
+    permissions: buildPermissions(permissions, existing.permissions)
+  };
+
+  agentPolicies.set(agentId, updatedPolicy);
+  prettyPrint('✏️ Policy updated', serializePolicy(updatedPolicy));
+  res.json(serializePolicy(updatedPolicy));
+});
+
+app.delete('/api/policies/:agentId', (req, res) => {
+  const agentId = req.params.agentId;
+  if (!agentPolicies.has(agentId)) {
+    return res.status(404).json({ error: 'Policy not found' });
+  }
+
+  const removed = agentPolicies.get(agentId);
+  agentPolicies.delete(agentId);
+  prettyPrint('🗑️ Policy removed', serializePolicy(removed));
+  res.status(204).send();
+});
 
 // Health check
 app.get('/health', (req, res) => {
