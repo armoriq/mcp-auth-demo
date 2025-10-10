@@ -1,11 +1,13 @@
-FROM node:18-alpine
-
+FROM node:18-alpine AS base
 WORKDIR /app
+ENV NODE_ENV=production
 
-COPY package.json ./
+FROM base AS deps
+COPY package*.json ./
+RUN npm install --omit=dev
 
-RUN npm install --production
-
+FROM base AS runtime
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 EXPOSE 5001
