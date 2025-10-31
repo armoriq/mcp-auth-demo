@@ -31,6 +31,11 @@ FastAPI service that surfaces proxy health, audit logs, and policy management en
 
 ## Quick Start
 
+Before running individual services, install their dependencies:
+```bash
+./scripts/install_demo_prereqs.sh
+```
+
 1. **Set up the MCP Endpoint:**
    ```bash
    cd mcp-endpoint-example

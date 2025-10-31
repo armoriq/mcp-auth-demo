@@ -74,11 +74,18 @@ if [ "${AVAILABLE_ADMIN_PORT}" != "${DEFAULT_ADMIN_PORT}" ]; then
 fi
 
 API_KEY="${ARMORIQ_API_KEY:-demo-key-12345678901234567890}"
-AGENT_ID="${AGENT_ID:-agent-123}"
+ACCESS_TOKEN="${ARMORIQ_ACCESS_TOKEN:-}"
 ENDPOINT_ID="${ENDPOINT_ID:-customer-data-service}"
 PROXY_URL="http://localhost:${AVAILABLE_PROXY_PORT}"
 PROXY_PATH="/proxy/${ENDPOINT_ID}/api/customers"
 ADMIN_URL="http://localhost:${AVAILABLE_ADMIN_PORT}"
+
+if [ -z "${ACCESS_TOKEN}" ]; then
+  echo "Warning: ARMORIQ_ACCESS_TOKEN is not set; proxy requests will be rejected." >&2
+  AUTH_HEADERS=()
+else
+  AUTH_HEADERS=(-H "Authorization: Bearer ${ACCESS_TOKEN}")
+fi
 
 echo "Starting ArmorIQ proxy stack (proxy + MCP endpoint + admin API)..."
 docker compose -f "$COMPOSE_FILE" up -d armoriq-proxy admin-api
@@ -95,14 +102,14 @@ echo
 echo "2) Permitting authorized READ access through the proxy:"
 curl -sS -w '\nHTTP %{http_code}\n' \
   -H "X-ArmorIQ-API-Key: ${API_KEY}" \
-  -H "X-ArmorIQ-Agent-ID: ${AGENT_ID}" \
+  "${AUTH_HEADERS[@]}" \
   "${PROXY_URL}${PROXY_PATH}" || true
 
 echo
 echo "3) Blocking unauthorized DELETE (policy denies delete):"
 curl -sS -w '\nHTTP %{http_code}\n' -X DELETE \
   -H "X-ArmorIQ-API-Key: ${API_KEY}" \
-  -H "X-ArmorIQ-Agent-ID: ${AGENT_ID}" \
+  "${AUTH_HEADERS[@]}" \
   "${PROXY_URL}${PROXY_PATH}/1" || true
 
 echo
